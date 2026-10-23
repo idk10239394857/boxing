@@ -41,7 +41,7 @@ export default function ProfileScreen() {
 
       <SectionHeader title="Danger zone" />
       <Card style={{ gap: space.md }}>
-        <Body color={colors.textDim}>Wipe every session, stat and checkmark and restore the demo fighter.</Body>
+        <Body color={colors.textDim}>Wipe every session, stat and checkmark and start again from zero.</Body>
         <Button
           label={confirmReset ? 'Tap again to confirm' : 'Reset all data'}
           variant={confirmReset ? 'primary' : 'ghost'}

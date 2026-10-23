@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 import { SKILLS, TIERS } from '../data/roadmap';
-import { makeSeed, type PersistedData } from '../data/seed';
+import { makeFresh, stripDemo, type PersistedData } from '../data/seed';
 import { TECHNIQUES } from '../data/techniques';
 import { computeStreaks, levelFromXp, rankTitle, sessionXp, XP } from '../lib/gamification';
 import type { Celebration, PunchType, Session, SessionType, UserState } from '../types';
@@ -80,7 +80,7 @@ export function isTierUnlocked(tierId: string, tiersCompleted: string[]): boolea
 export const useFightStore = create<FightStore>()(
   persist(
     (set) => ({
-      ...makeSeed(),
+      ...makeFresh(),
       celebrations: [],
       toast: null,
 
@@ -193,11 +193,19 @@ export const useFightStore = create<FightStore>()(
 
       dismissCelebration: () => set((s) => ({ celebrations: s.celebrations.slice(1) })),
 
-      resetData: () => set({ ...makeSeed(), celebrations: [], toast: null }),
+      resetData: () => set({ ...makeFresh(), celebrations: [], toast: null }),
     }),
     {
       name: 'fightflow-v1',
-      version: 1,
+      version: 2,
+      // v1 shipped a demo fighter to everyone; v2 starts empty and strips it from old installs.
+      migrate: (persisted, version) => {
+        const data = persisted as PersistedData;
+        if (version >= 2 || !data?.sessions) return data;
+        const clean = stripDemo(data);
+        const level = levelFromXp(clean.user.xp);
+        return { ...clean, user: withStreaks({ ...clean.user, level }, clean.sessions) };
+      },
       storage: createJSONStorage(() => safeStorage),
       partialize: (s): PersistedData => ({
         user: s.user,
