@@ -44,7 +44,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "tune": "tsx tests/matrix.ts",
-    "build:site": "rm -rf web && expo export --platform web --output-dir web",
+    "build:site": "rm -rf web && expo export --platform web --output-dir web && node scripts/fix-web-assets.mjs web",
     "build:single": "FF_SINGLE_BUNDLE=1 expo export --platform web --output-dir dist-single"
   },
   "private": true
