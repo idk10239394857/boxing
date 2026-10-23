@@ -1,0 +1,30 @@
+import * as C from '../src/features/boxer/clips';
+/** Expected labels; alternatives separated by '|' (e.g. a shoulder roll also reads as a slip). */
+export const EXPECT: [string, C.Clip, string[] | string[][]][] = [
+  ['Jab', C.JAB, ['Jab']],
+  ['Cross', C.CROSS, ['Cross']],
+  ['Lead hook', C.LEAD_HOOK, ['Lead Hook']],
+  ['Rear hook', C.REAR_HOOK, ['Rear Hook']],
+  ['Lead uppercut', C.LEAD_UPPER, ['Lead Uppercut']],
+  ['Rear uppercut', C.REAR_UPPER, ['Rear Uppercut']],
+  ['Overhand right', C.OVERHAND, ['Cross']],
+  ['Body jab', C.BODY_JAB, ['Body Jab']],
+  ['Body cross', C.BODY_CROSS, ['Body Cross']],
+  ['Liver shot', C.LIVER, [['Liver Shot'], ['Body Jab']]], // both are body shots; side-on they can look alike
+  ['1-2', C.ONE_TWO, ['Jab', 'Cross']],
+  ['Jab-cross-hook', C.JAB_CROSS_HOOK, ['Jab', 'Cross', 'Lead Hook']],
+  ['Hook-cross-hook', C.HOOK_CROSS_HOOK, ['Lead Hook', 'Cross', 'Lead Hook']],
+  ['Body-head', C.BODY_HEAD, ['Body Cross', 'Lead Hook']],
+  ['Slip x2', C.SLIP, ['Slip', 'Slip']],
+  ['Roll', C.ROLL, ['Roll']],
+  ['Pull-back + cross', C.PULL_BACK, ['Cross']],
+  ['High block', C.HIGH_BLOCK, []],
+  ['Parry + jab', C.PARRY, ['Jab']],
+  ['Catch + jab', C.CATCH, ['Jab']],
+  ['Shoulder roll + cross', C.SHOULDER_ROLL, [['Cross'], ['Slip', 'Cross']]],
+  ['Step-drag', C.STEP_DRAG, []],
+  ['Lateral', C.LATERAL, []],
+  ['Pivot', C.PIVOTS, []],
+  ['Cutting angle', C.CUTTING_ANGLES, ['Jab']],
+  ['In-and-out', C.IN_AND_OUT, ['Jab']],
+];
