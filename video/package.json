@@ -1,0 +1,20 @@
+{
+  "name": "fightflow-launch",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render FightFlowLaunch out/fightflow-launch.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.538",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.538"
+  },
+  "devDependencies": {
+    "@remotion/bundler": "^4.0.538",
+    "@remotion/renderer": "^4.0.538",
+    "@types/react": "^18.3.31",
+    "typescript": "^5.9.3"
+  }
+}

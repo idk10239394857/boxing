@@ -82,3 +82,17 @@ tests/              detector tests, simulator, MediaPipe fixtures, e2e tooling
 Static content (technique text, roadmap skills) lives in `src/data`; the store only persists progress (drill counts, checked skills, sessions, punch totals), so editing seed content never needs a migration.
 
 Rename: change `name` in `app.json` and the `FIGHTFLOW` title in `src/app/(tabs)/index.tsx`.
+
+## Launch video
+
+`video/` is the 15 s launch video, built in code with Remotion (1920x1080, 60 fps, 120 BPM: one beat = 30 frames).
+
+```bash
+cd video
+npm install
+npm run studio                       # preview and scrub
+python3 scripts/mix.py ../assets/sounds public/mix.wav   # rebuild the synced sound bed
+npm run render                       # writes out/fightflow-launch.mp4
+```
+
+The finished file is `marketing/fightflow-launch.mp4`.
