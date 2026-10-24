@@ -98,3 +98,24 @@ python3 scripts/mix_vertical.py ../assets/sounds public/mix-vertical.wav   # the
 ```
 
 The finished file is `marketing/fightflow-launch.mp4`.
+
+## Paid access (Gumroad)
+
+The whole site sits behind a paywall. Buyers unlock it once per device with the license key from their Gumroad receipt.
+
+- `middleware.ts` runs before every request. Without a valid access pass, pages go to `/unlock` and every app file (JS, fonts, images) returns 401. It fails closed: if `ACCESS_SECRET` is missing, nothing is served.
+- `api/unlock.ts` checks the key with Gumroad's license API on the server, refuses refunded, charged-back or disputed purchases and ended memberships, and caps how many devices a key can unlock.
+- The access pass is an HttpOnly, Secure cookie sealed with AES-GCM under `ACCESS_SECRET`: page scripts can't read it and it can't be forged or edited. It lasts 30 days, and about once a day the middleware re-checks the key with Gumroad so refunds lock out. A Gumroad outage never locks out a paying customer.
+- `/api/logout` signs a device out.
+- No secrets live in the browser. `public/paywall/unlock.html` only talks to `/api/unlock`.
+
+Set these in Vercel → Project → Settings → Environment Variables (Production), then redeploy:
+
+| Variable | What it is |
+| --- | --- |
+| `ACCESS_SECRET` | A random string of at least 32 characters. Keep it secret; changing it signs everyone out. |
+| `GUMROAD_PRODUCT_ID` | Your product's ID (Gumroad → product → Content → License key section). |
+| `GUMROAD_BUY_URL` | Your product's public URL, for the Buy button. |
+| `MAX_ACTIVATIONS` | Optional. How many unlocks one key allows (default 10). |
+
+Turn on "Generate a unique license key per sale" on the Gumroad product. Tests: `npm test` covers the paywall in `tests/paywall.test.ts`.
