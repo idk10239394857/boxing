@@ -99,23 +99,28 @@ python3 scripts/mix_vertical.py ../assets/sounds public/mix-vertical.wav   # the
 
 The finished file is `marketing/fightflow-launch.mp4`.
 
-## Paid access (Gumroad)
+## FightFlow Pro (2.0): paywall and Stripe subscriptions
 
-The whole site sits behind a paywall. Buyers unlock it once per device with the license key from their Gumroad receipt.
+The app opens on a paywall (`src/features/paywall`). Subscribers pay through Stripe Checkout, and the app unlocks only after the server confirms the subscription with Stripe. The free 1.0 build is kept on the `v1` branch.
 
-- `middleware.ts` runs before every request. Without a valid access pass, pages go to `/unlock` and every app file (JS, fonts, images) returns 401. It fails closed: if `ACCESS_SECRET` is missing, nothing is served.
-- `api/unlock.ts` checks the key with Gumroad's license API on the server, refuses refunded, charged-back or disputed purchases and ended memberships, and caps how many devices a key can unlock.
-- The access pass is an HttpOnly, Secure cookie sealed with AES-GCM under `ACCESS_SECRET`: page scripts can't read it and it can't be forged or edited. It lasts 30 days, and about once a day the middleware re-checks the key with Gumroad so refunds lock out. A Gumroad outage never locks out a paying customer.
-- `/api/logout` signs a device out.
-- No secrets live in the browser. `public/paywall/unlock.html` only talks to `/api/unlock`.
+How it works:
 
-Set these in Vercel → Project → Settings → Environment Variables (Production), then redeploy:
+- `GET /api/entitlement` tells the app whether this device is unlocked and, if not, the live prices from Stripe.
+- `POST /api/checkout` creates a Stripe Checkout Session (subscription, optional free trial, promo codes allowed) and the browser goes to Stripe's hosted page.
+- Stripe returns the buyer to `/api/checkout-return`, which looks the session up server-side; only a completed checkout with an active or trialing subscription earns the access pass.
+- The access pass is an HttpOnly, Secure cookie sealed with AES-GCM under `ACCESS_SECRET` (30 days). About once a day it is re-checked with Stripe, so cancellations and unpaid subscriptions lock the app; a Stripe outage never does.
+- `POST /api/portal` opens Stripe's customer portal (Profile → Manage subscription). `/api/logout` signs a device out.
+- `POST /api/restore` emails a 15-minute sign-in link to an existing subscriber on a new device (needs Resend; hidden until configured).
+- The Stripe secret key lives only in Vercel's server environment. Nothing secret is in the app bundle.
+
+Vercel environment variables (Production and Preview):
 
 | Variable | What it is |
 | --- | --- |
-| `ACCESS_SECRET` | A random string of at least 32 characters. Keep it secret; changing it signs everyone out. |
-| `GUMROAD_PRODUCT_ID` | Your product's ID (Gumroad → product → Content → License key section). |
-| `GUMROAD_BUY_URL` | Your product's public URL, for the Buy button. |
-| `MAX_ACTIVATIONS` | Optional. How many unlocks one key allows (default 10). |
+| `STRIPE_SECRET_KEY` | Stripe secret key (`sk_test_…` while testing, `sk_live_…` to sell). Sensitive. |
+| `ACCESS_SECRET` | Random string, 32+ characters. Sensitive. Changing it signs everyone out. |
+| `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY` | Price IDs of the two plans (either can be left out). |
+| `STRIPE_TRIAL_DAYS` | Optional free trial length. |
+| `RESEND_API_KEY`, `RESTORE_FROM_EMAIL` | Optional: turn on "Restore purchase" emails. |
 
-Turn on "Generate a unique license key per sale" on the Gumroad product. Tests: `npm test` covers the paywall in `tests/paywall.test.ts`.
+Tests: `tests/paywall.test.ts` runs the whole flow against a fake Stripe (`npm test`).

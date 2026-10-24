@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
 import { Avatar } from '../components/home/FighterCard';
 import { closeModal, ModalHeader } from '../components/ModalHeader';
 import { Body, Button, Card, Label, Screen, SectionHeader } from '../components/ui';
+import { openPortal } from '../features/paywall/api';
 import { useFightStore } from '../store/useFightStore';
 import { colors, fonts, radius, space } from '../theme';
 
@@ -12,6 +13,16 @@ export default function ProfileScreen() {
   const resetData = useFightStore((s) => s.resetData);
   const [name, setName] = useState(user.name);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [billing, setBilling] = useState<string | null>(null);
+
+  const manage = async () => {
+    setBilling('Opening billing…');
+    try {
+      window.location.assign((await openPortal()).url);
+    } catch (e) {
+      setBilling((e as Error).message);
+    }
+  };
 
   const save = () => {
     updateProfile({ name: name.trim() || 'You' });
@@ -38,6 +49,18 @@ export default function ProfileScreen() {
       </View>
 
       <Button label="Save" icon="check" size="lg" onPress={save} />
+
+      {Platform.OS === 'web' ? (
+        <>
+          <SectionHeader title="Membership" />
+          <Card style={{ gap: space.md }}>
+            <Body color={colors.textDim}>Change your plan, update your card or cancel. Billing is handled by Stripe.</Body>
+            <Button label="Manage subscription" variant="ghost" icon="credit-card-outline" onPress={manage} />
+            {billing ? <Label>{billing}</Label> : null}
+            <Button label="Sign out of this device" variant="ghost" icon="logout" onPress={() => window.location.assign('/api/logout')} />
+          </Card>
+        </>
+      ) : null}
 
       <SectionHeader title="Danger zone" />
       <Card style={{ gap: space.md }}>

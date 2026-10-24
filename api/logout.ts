@@ -1,7 +1,8 @@
+import { redirect } from '../server/http';
 import { clearCookie } from '../server/session';
 
-/** Sign this device out: drop the access pass and go back to the unlock page. */
-export function GET() {
-  return new Response(null, { status: 303, headers: { location: '/unlock', 'set-cookie': clearCookie(), 'cache-control': 'no-store' } });
+/** Sign this device out of the subscription. */
+export function POST() {
+  return redirect('/', { 'set-cookie': clearCookie() });
 }
-export const POST = GET;
+export const GET = POST;

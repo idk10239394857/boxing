@@ -14,6 +14,7 @@ import { AppState, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { CelebrationModal } from '../components/CelebrationModal';
 import { XpToast } from '../components/XpToast';
+import { PaywallGate } from '../features/paywall/PaywallGate';
 import { useFightStore } from '../store/useFightStore';
 import { colors } from '../theme';
 
@@ -59,14 +60,16 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider value={theme}>
         <StatusBar style="light" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="log-session" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="technique/[id]" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="profile" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="timer" options={{ presentation: 'fullScreenModal' }} />
-          <Stack.Screen name="track" options={{ presentation: 'fullScreenModal' }} />
-        </Stack>
+        <PaywallGate>
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="log-session" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="technique/[id]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="profile" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="timer" options={{ presentation: 'fullScreenModal' }} />
+            <Stack.Screen name="track" options={{ presentation: 'fullScreenModal' }} />
+          </Stack>
+        </PaywallGate>
         <XpToast />
         <CelebrationModal />
       </ThemeProvider>

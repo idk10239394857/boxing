@@ -1,24 +1,35 @@
 /**
- * The access pass: a cookie holding the buyer's license key and sale, sealed with AES-GCM under
- * ACCESS_SECRET. It is HttpOnly (page scripts can't read it) and authenticated (any change makes
- * it fail to open), so it can't be forged or edited without the server's secret.
+ * Sealed tokens: JSON encrypted and authenticated with AES-GCM under ACCESS_SECRET. Used for the
+ * subscriber's access pass (an HttpOnly cookie) and for short-lived restore links. Changing any
+ * byte makes a token fail to open, so they can't be forged or edited without the server's secret.
  */
-export const COOKIE = 'ff_access';
-export const SESSION_MS = 30 * 24 * 3600 * 1000;
-/** How often an open session is re-checked with Gumroad, so refunds take effect. */
+export const COOKIE = 'ff_pass';
+export const PASS_MS = 30 * 24 * 3600 * 1000;
+/** How often a pass is re-checked with Stripe, so cancellations and failed payments take effect. */
 export const RECHECK_MS = 24 * 3600 * 1000;
 export const MIN_SECRET_LENGTH = 32;
 
-export interface Session {
-  /** Gumroad license key. */
-  key: string;
-  /** Gumroad sale id. */
-  sale: string;
-  /** Issued, last checked with Gumroad, expires (ms since epoch). */
+/** A subscriber's access pass. */
+export interface Pass {
+  kind: 'pass';
+  /** Stripe customer and subscription. */
+  cus: string;
+  sub: string;
+  /** Issued, last checked with Stripe, expires (ms since epoch). */
   iat: number;
   chk: number;
   exp: number;
 }
+
+/** A one-time sign-in link for restoring a purchase on another device. */
+export interface RestoreToken {
+  kind: 'restore';
+  cus: string;
+  sub: string;
+  exp: number;
+}
+
+type Sealed = Pass | RestoreToken;
 
 const te = new TextEncoder();
 const td = new TextDecoder();
@@ -40,29 +51,29 @@ async function keyFor(secret: string) {
   return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
 }
 
-export async function seal(session: Session, secret: string): Promise<string> {
+export async function seal(value: Sealed, secret: string): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await keyFor(secret), te.encode(JSON.stringify(session))));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await keyFor(secret), te.encode(JSON.stringify(value))));
   return `${b64url(iv)}.${b64url(ct)}`;
 }
 
-/** The session inside `token`, or null if it was tampered with, sealed with another secret, or expired. */
-export async function open(token: string, secret: string, now = Date.now()): Promise<Session | null> {
+/** The value inside `token` if it is intact, of the expected kind and unexpired; otherwise null. */
+export async function open<K extends Sealed['kind']>(token: string, kind: K, secret: string, now = Date.now()): Promise<Extract<Sealed, { kind: K }> | null> {
   try {
     const [iv, ct] = token.split('.');
     if (!iv || !ct) return null;
     const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromB64url(iv) }, await keyFor(secret), fromB64url(ct));
-    const s = JSON.parse(td.decode(plain)) as Session;
-    if (typeof s.key !== 'string' || typeof s.exp !== 'number' || s.exp <= now) return null;
-    return s;
+    const v = JSON.parse(td.decode(plain)) as Sealed;
+    if (v.kind !== kind || typeof v.cus !== 'string' || typeof v.exp !== 'number' || v.exp <= now) return null;
+    return v as Extract<Sealed, { kind: K }>;
   } catch {
     return null;
   }
 }
 
-export const newSession = (key: string, sale: string, now = Date.now()): Session => ({ key, sale, iat: now, chk: now, exp: now + SESSION_MS });
+export const newPass = (cus: string, sub: string, now = Date.now()): Pass => ({ kind: 'pass', cus, sub, iat: now, chk: now, exp: now + PASS_MS });
 
-export const setCookie = (token: string) => `${COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_MS / 1000}`;
+export const setCookie = (token: string) => `${COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${PASS_MS / 1000}`;
 export const clearCookie = () => `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 
 export function readCookie(request: Request, name = COOKIE): string | null {
