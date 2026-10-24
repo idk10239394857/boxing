@@ -92,7 +92,9 @@ cd video
 npm install
 npm run studio                       # preview and scrub
 python3 scripts/mix.py ../assets/sounds public/mix.wav   # rebuild the synced sound bed
-npm run render                       # writes out/fightflow-launch.mp4
+npm run render                       # 16:9, writes out/fightflow-launch.mp4
+npm run render:vertical              # 9:16 for Reels and TikTok
+python3 scripts/mix_vertical.py ../assets/sounds public/mix-vertical.wav   # the 9:16 sound bed
 ```
 
 The finished file is `marketing/fightflow-launch.mp4`.

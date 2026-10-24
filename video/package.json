@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "studio": "remotion studio",
-    "render": "remotion render FightFlowLaunch out/fightflow-launch.mp4"
+    "render": "remotion render FightFlowLaunch out/fightflow-launch.mp4",
+    "render:vertical": "remotion render FightFlowVertical out/fightflow-launch-vertical.mp4"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.538",

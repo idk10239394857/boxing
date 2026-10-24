@@ -8,8 +8,8 @@ import { D, enter, exit, fluid, lerp, scramble, spring, tween } from './motion';
  * igloo-style layer (RGB split + displacement, red-tape wipes) timed on the same curves.
  */
 
-const RED = '#E8202A';
-const INK = '#070707';
+export const RED = '#E8202A';
+export const INK = '#070707';
 const POSTER = 'Poster';
 const CAPS = 'Caps';
 const TEXT = 'Text';
@@ -21,7 +21,7 @@ const FONTS: [string, string, string?][] = [
   [`${TEXT}Semi`, 'fonts/InterTight_600SemiBold.ttf'],
 ];
 
-function useFonts() {
+export function useFonts() {
   const [handle] = useState(() => delayRender('fonts'));
   useEffect(() => {
     Promise.all(
@@ -32,7 +32,7 @@ function useFonts() {
   }, [handle]);
 }
 
-const poster = (size: number, color = '#fff'): CSSProperties => ({
+export const poster = (size: number, color = '#fff'): CSSProperties => ({
   fontFamily: POSTER,
   fontStyle: 'italic',
   fontSize: size,
@@ -42,7 +42,7 @@ const poster = (size: number, color = '#fff'): CSSProperties => ({
   color,
   whiteSpace: 'nowrap',
 });
-const caps = (size: number, color = RED): CSSProperties => ({
+export const caps = (size: number, color = RED): CSSProperties => ({
   fontFamily: CAPS,
   fontSize: size,
   letterSpacing: 0.2 * size,
@@ -50,7 +50,7 @@ const caps = (size: number, color = RED): CSSProperties => ({
   color,
   whiteSpace: 'nowrap',
 });
-const body = (size: number, color = '#BDBDBD'): CSSProperties => ({ fontFamily: TEXT, fontSize: size, lineHeight: 1.4, color });
+export const body = (size: number, color = '#BDBDBD'): CSSProperties => ({ fontFamily: TEXT, fontSize: size, lineHeight: 1.4, color });
 
 /* ---------- Scene-layer effects ---------- */
 
@@ -65,7 +65,7 @@ function glitchAt(f: number) {
   return GLITCHES.reduce((a, [c, s]) => a + s * Math.max(0, 1 - Math.abs(f - c) / 9) ** 2, 0);
 }
 
-function GlitchFilter({ amount, frame }: { amount: number; frame: number }) {
+export function GlitchFilter({ amount, frame }: { amount: number; frame: number }) {
   const dx = amount * 26;
   return (
     <svg width="0" height="0" style={{ position: 'absolute' }}>
@@ -119,7 +119,7 @@ function Backdrop({ frame }: { frame: number }) {
 }
 
 /** Bell visual: a ring that expands from a point and fades. */
-function Shockwave({ frame, at, x, y, color = RED }: { frame: number; at: number; x: number; y: number; color?: string }) {
+export function Shockwave({ frame, at, x, y, color = RED }: { frame: number; at: number; x: number; y: number; color?: string }) {
   const k = tween(frame, at, 40, fluid);
   if (frame < at || k >= 1) return null;
   const r = lerp(20, 1100, k);
@@ -132,7 +132,7 @@ function Shockwave({ frame, at, x, y, color = RED }: { frame: number; at: number
 }
 
 /** A poster line that slams in: drops from slightly too big, critically damped. */
-function Slam({ frame, at, children, style }: { frame: number; at: number; children: ReactNode; style?: CSSProperties }) {
+export function Slam({ frame, at, children, style }: { frame: number; at: number; children: ReactNode; style?: CSSProperties }) {
   if (frame < at) return null;
   const s = spring(frame, at, 1.32, 1, 0.3);
   const y = spring(frame, at, 70, 0, 0.3);
@@ -141,7 +141,7 @@ function Slam({ frame, at, children, style }: { frame: number; at: number; child
 }
 
 /** MOTION.md hero title / main content entrance. */
-function Rise({ frame, at, dist = 28, dur = D.slow, children, style }: { frame: number; at: number; dist?: number; dur?: number; children: ReactNode; style?: CSSProperties }) {
+export function Rise({ frame, at, dist = 28, dur = D.slow, children, style }: { frame: number; at: number; dist?: number; dur?: number; children: ReactNode; style?: CSSProperties }) {
   const k = tween(frame, at, dur, enter);
   return <div style={{ ...style, opacity: k, transform: `translateY(${(1 - k) * dist}px)` }}>{children}</div>;
 }
@@ -174,19 +174,20 @@ const GUARD: Pose = {
   lhip: [318, 400], rhip: [278, 402], lk: [362, 528], rk: [246, 530], lf: [392, 664], rf: [214, 664],
 };
 const P = (d: Partial<Pose>): Pose => ({ ...GUARD, ...d });
-const POSES = {
+export const POSES = {
   jab: P({ ls: [345, 210], le: [440, 206], lh: [548, 200], head: [312, 142], neck: [306, 195] }),
   cross: P({ rs: [300, 206], re: [398, 206], rh: [538, 200], ls: [340, 214], le: [346, 290], lh: [360, 206], head: [322, 146], neck: [314, 196], rhip: [292, 402], rk: [262, 528] }),
   hook: P({ ls: [338, 206], le: [430, 192], lh: [474, 236], head: [318, 150], neck: [310, 198], lhip: [324, 400] }),
   uppercut: P({ rs: [290, 222], re: [336, 318], rh: [404, 192], head: [312, 168], neck: [306, 218], lk: [366, 540], rk: [252, 540], lhip: [318, 412], rhip: [280, 414], ls: [330, 230], le: [350, 306], lh: [372, 232] }),
   slip: P({ head: [348, 184], neck: [328, 228], ls: [354, 242], rs: [292, 242], le: [372, 318], re: [300, 320], lh: [394, 242], rh: [346, 252], lhip: [322, 404], rhip: [282, 404], lk: [368, 534], rk: [244, 534] }),
 };
-type Move = keyof typeof POSES;
-const EVENTS: [number, Move][] = [
+export type Move = keyof typeof POSES;
+export type Hit = [number, Move];
+const EVENTS: Hit[] = [
   [150, 'jab'], [180, 'cross'], [210, 'hook'], [240, 'uppercut'], [270, 'slip'], [300, 'jab'], [315, 'jab'], [330, 'cross'],
 ];
-const PUNCH_COLOR: Record<Move, string> = { jab: '#FFFFFF', cross: RED, hook: '#FF7A45', uppercut: '#FFC24A', slip: '#FFFFFF' };
-const LABEL: Record<Move, string> = { jab: 'Jab', cross: 'Cross', hook: 'Hook', uppercut: 'Uppercut', slip: 'Slip' };
+export const PUNCH_COLOR: Record<Move, string> = { jab: '#FFFFFF', cross: RED, hook: '#FF7A45', uppercut: '#FFC24A', slip: '#FFFFFF' };
+export const LABEL: Record<Move, string> = { jab: 'Jab', cross: 'Cross', hook: 'Hook', uppercut: 'Uppercut', slip: 'Slip' };
 
 function weight(f: number, p: number, slip: boolean) {
   const [rise, hold, back] = slip ? [12, 8, 20] : [7, 3, 13];
@@ -195,9 +196,9 @@ function weight(f: number, p: number, slip: boolean) {
   if (f <= p + hold) return 1;
   return 1 - fluid((f - p - hold) / back);
 }
-function poseAt(f: number): Pose {
+function poseAt(f: number, events: Hit[] = EVENTS): Pose {
   const out = { ...GUARD } as Pose;
-  for (const [p, m] of EVENTS) {
+  for (const [p, m] of events) {
     const w = weight(f, p, m === 'slip');
     if (!w) continue;
     for (const j of Object.keys(GUARD) as Joint[]) {
@@ -213,13 +214,13 @@ const BONES: [Joint, Joint][] = [
   ['neck', 'ls'], ['neck', 'rs'], ['ls', 'le'], ['le', 'lh'], ['rs', 're'], ['re', 'rh'], ['lhip', 'rhip'], ['lhip', 'lk'], ['lk', 'lf'], ['rhip', 'rk'], ['rk', 'rf'],
 ];
 
-function Fighter({ frame }: { frame: number }) {
-  const pose = poseAt(frame);
+export function Fighter({ frame, events = EVENTS }: { frame: number; events?: Hit[] }) {
+  const pose = poseAt(frame, events);
   const mid: [number, number] = [(pose.lhip[0] + pose.rhip[0]) / 2, (pose.lhip[1] + pose.rhip[1]) / 2];
   const trail = (hand: 'lh' | 'rh') =>
     Array.from({ length: 7 }, (_, i) => {
-      const a = poseAt(frame - i - 1)[hand];
-      const b = poseAt(frame - i)[hand];
+      const a = poseAt(frame - i - 1, events)[hand];
+      const b = poseAt(frame - i, events)[hand];
       const speed = Math.hypot(b[0] - a[0], b[1] - a[1]);
       return speed > 4 ? <circle key={i} cx={a[0]} cy={a[1]} r={20 - i * 2} fill={RED} opacity={(0.5 * (7 - i)) / 7} /> : null;
     });
@@ -242,7 +243,7 @@ function Fighter({ frame }: { frame: number }) {
         ))}
       <circle cx={pose.lh[0]} cy={pose.lh[1]} r={22} fill={RED} stroke="#fff" strokeWidth={3} />
       <circle cx={pose.rh[0]} cy={pose.rh[1]} r={22} fill={RED} stroke="#fff" strokeWidth={3} />
-      {EVENTS.filter(([, m]) => m !== 'slip').map(([p, m]) => {
+      {events.filter(([, m]) => m !== 'slip').map(([p, m]) => {
         const k = tween(frame, p, 16, fluid);
         if (frame < p || k >= 1) return null;
         const hand = m === 'jab' || m === 'hook' ? POSES[m].lh : POSES[m].rh;
@@ -261,10 +262,10 @@ function Fighter({ frame }: { frame: number }) {
   );
 }
 
-function PunchTags({ frame }: { frame: number }) {
+export function PunchTags({ frame, events = EVENTS, size = 54 }: { frame: number; events?: Hit[]; size?: number }) {
   return (
     <>
-      {EVENTS.map(([p, m]) => {
+      {events.map(([p, m]) => {
         if (frame < p || frame > p + 46) return null;
         const hand = m === 'slip' ? POSES.slip.head : m === 'jab' || m === 'hook' ? POSES[m].lh : POSES[m].rh;
         const s = spring(frame, p, 0.6, 1, 0.28);
@@ -287,7 +288,7 @@ function PunchTags({ frame }: { frame: number }) {
               padding: '6px 18px 2px',
             }}
           >
-            <div style={{ ...poster(54, slab && color !== RED ? INK : '#fff'), transform: 'skewX(10deg)' }}>{LABEL[m]}</div>
+            <div style={{ ...poster(size, slab && color !== RED ? INK : '#fff'), transform: 'skewX(10deg)' }}>{LABEL[m]}</div>
           </div>
         );
       })}
@@ -375,7 +376,7 @@ function Callout({ frame, at, out, x, y, ax, ay, value, label }: { frame: number
   );
 }
 
-function count(frame: number, at: number, to: number, dur = 30) {
+export function count(frame: number, at: number, to: number, dur = 30) {
   return Math.round(to * tween(frame, at, dur, fluid));
 }
 
